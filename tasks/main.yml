@@ -1,0 +1,48 @@
+---
+  - name: install rsync service
+    become: yes
+    apt: 
+      name: 'rsync' 
+      state: 'latest'
+
+  - name: create user
+    become: yes
+    user:
+      name: "{{item.user_name}}"
+      home: "{{backup_target_user_backup_dir}}/{{item.user_name}}"
+    with_items: "{{ backup_target_user_homes }}"
+
+  - name: make user home readable for user only
+    become: yes
+    file:
+      path: "{{backup_target_user_backup_dir}}/{{item.user_name}}"
+      mode: "0750"
+    with_items: "{{ backup_target_user_homes }}"
+
+  - name: ensure .ssh directory
+    become: yes
+    file:
+      path: "{{backup_target_user_backup_dir}}/{{item.user_name}}/.ssh"
+      mode: "0700"
+      owner: "{{item.user_name}}"
+      group: "{{item.user_name}}"
+      state: "directory"
+    with_items: "{{ backup_target_user_homes }}"
+
+  - name: place public ssh keys for authentication
+    become: yes
+    authorized_key: 
+      user: "{{item.user_name}}"
+      key: "{{ lookup('file', '{{ remote_access_authorized_keys_prefix }}/{{ item.public_key_name }}.pub') }}\n"
+      exclusive: yes
+    with_items: "{{ backup_target_user_homes }}"
+
+  - name: ensure backup directory
+    become: yes
+    file:
+      path: "{{backup_target_user_backup_dir}}/{{item.user_name}}/backup"
+      mode: "0700"
+      owner: "{{item.user_name}}"
+      group: "{{item.user_name}}"
+      state: "directory"
+    with_items: "{{ backup_target_user_homes }}"
