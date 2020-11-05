@@ -10,14 +10,14 @@
     user:
       name: "{{item.user_name}}"
       home: "{{backup_target_user_backup_dir}}/{{item.user_name}}"
-    with_items: "{{ backup_target_user_homes }}"
+    loop: "{{ backup_target_user_homes }}"
 
   - name: make user home readable for user only
     become: yes
     file:
       path: "{{backup_target_user_backup_dir}}/{{item.user_name}}"
       mode: "0750"
-    with_items: "{{ backup_target_user_homes }}"
+    loop: "{{ backup_target_user_homes }}"
 
   - name: ensure .ssh directory
     become: yes
@@ -27,7 +27,7 @@
       owner: "{{item.user_name}}"
       group: "{{item.user_name}}"
       state: "directory"
-    with_items: "{{ backup_target_user_homes }}"
+    loop: "{{ backup_target_user_homes }}"
 
   - name: place public ssh keys for authentication
     become: yes
@@ -35,7 +35,7 @@
       user: "{{item.user_name}}"
       key: "{{ lookup('file', '{{ remote_access_authorized_keys_prefix }}/{{ item.public_key_name }}.pub') }}\n"
       exclusive: yes
-    with_items: "{{ backup_target_user_homes }}"
+    loop: "{{ backup_target_user_homes }}"
 
   - name: ensure backup directory
     become: yes
@@ -45,4 +45,4 @@
       owner: "{{item.user_name}}"
       group: "{{item.user_name}}"
       state: "directory"
-    with_items: "{{ backup_target_user_homes }}"
+    loop: "{{ backup_target_user_homes }}"
